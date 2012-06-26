@@ -21,7 +21,6 @@ public class jdbc extends Verticle {
      
       final Config configuration = loadConfig(container.getConfig());
 
-
       try{
          loadDriver(configuration.driver);
          beginListening(configuration);
@@ -49,6 +48,8 @@ public class jdbc extends Verticle {
       }catch(Exception e){
          e.printStackTrace();
       }
+
+      beginListening(configuration);
    }
 
 
