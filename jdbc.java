@@ -5,6 +5,8 @@ import org.vertx.java.deploy.*;
 
 import java.sql.*;
 
+import jdbc.handlers.*;
+
 public class jdbc extends Verticle {
   
    private class Config {
@@ -56,11 +58,7 @@ public class jdbc extends Verticle {
 
       eb.registerHandler(
          "test.address",
-         new Handler<Message<JsonObject>>(){
-            public void handle(Message<JsonObject> message){
-               container.getLogger().info("Message Received " + message);
-            }
-         }
+         new SelectHandler()
       );
    }
 
