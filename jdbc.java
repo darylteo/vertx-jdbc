@@ -1,4 +1,5 @@
 import org.vertx.java.core.*;
+import org.vertx.java.core.eventbus.*;
 import org.vertx.java.core.json.*;
 import org.vertx.java.deploy.*;
 
@@ -18,8 +19,10 @@ public class jdbc extends Verticle {
      
       final Config configuration = loadConfig(container.getConfig());
 
+
       try{
          loadDriver(configuration.driver);
+         beginListening(configuration);
       }catch(ClassNotFoundException e){
          container.getLogger().fatal(
             String.format(
@@ -33,11 +36,7 @@ public class jdbc extends Verticle {
       }
 
       try(
-         Connection conn = DriverManager.getConnection(
-            configuration.url,
-            configuration.username,
-            configuration.password
-         );
+         Connection conn = openConnection(configuration)
       ){
          container.getLogger().info(
             String.format(
@@ -48,7 +47,46 @@ public class jdbc extends Verticle {
       }catch(Exception e){
          e.printStackTrace();
       }
+   }
 
+
+   /* EventBus Methods */
+   private void beginListening(Config configuration){
+      EventBus eb = vertx.eventBus();   
+
+      eb.registerHandler(
+         "test.address",
+         new Handler<Message<JsonObject>>(){
+            public void handle(Message<JsonObject> message){
+               container.getLogger().info("Message Received " + message);
+            }
+         }
+      );
+   }
+
+
+   /* JDBC Methods */
+   private void loadDriver(String driver) throws ClassNotFoundException{
+      /*
+       * Supposedly with JDBC 4 this should not be required,
+       * but I can't seem to get it to work without it...
+       * Someone tell me what I'm missing ~dteo 2012-06-26
+       */
+      if(driver.isEmpty()){
+         return;
+      }
+      
+      Class.forName(driver); 
+   }
+
+   private Connection openConnection(Config configuration) 
+      throws SQLException {
+
+      return DriverManager.getConnection(
+         configuration.url,
+         configuration.username,
+         configuration.password
+      );
    }
 
    private void closeConnection(Connection conn){
@@ -63,6 +101,9 @@ public class jdbc extends Verticle {
       }
    }
 
+
+
+   /* Configuration Methods */
    private Config loadConfig(JsonObject config){
       Config result = new Config();
 
@@ -78,16 +119,4 @@ public class jdbc extends Verticle {
       return result;
    }
 
-   private void loadDriver(String driver) throws ClassNotFoundException{
-      /*
-       * Supposedly with JDBC 4 this should not be required,
-       * but I can't seem to get it to work without it...
-       * Someone tell me what I'm missing ~dteo 2012-06-26
-       */
-      if(driver.isEmpty()){
-         return;
-      }
-      
-      Class.forName(driver); 
-   }
 }
