@@ -1,0 +1,2 @@
+#!/bin/bash
+javac *.java -cp /usr/lib/vertx/lib/jars/vert.x-core.jar:/usr/lib/vertx/lib/jars/vert.x-platform.jar:.
