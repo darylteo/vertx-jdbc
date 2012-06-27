@@ -75,7 +75,18 @@ public abstract class JdbcHandler
       }
 
       result.putArray("result", data);
+      result.putBoolean("success", true);
 
       return result;
    }
-}
+
+
+   JsonObject generateErrorReply(Exception e){
+      return 
+         new JsonObject()
+            .putBoolean("success", false)
+            .putString("error",e.getMessage());
+
+
+   }
+} 

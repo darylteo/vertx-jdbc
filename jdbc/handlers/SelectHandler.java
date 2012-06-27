@@ -40,6 +40,10 @@ public class SelectHandler extends JdbcHandler {
          message.reply(result);
       }catch(SQLException e){
          e.printStackTrace();
+
+         message.reply(
+            super.generateErrorReply(e)
+         );
       }
    }
 
