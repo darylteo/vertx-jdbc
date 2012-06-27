@@ -4,10 +4,12 @@ import org.vertx.java.core.*;
 import org.vertx.java.core.eventbus.*;
 import org.vertx.java.core.json.*;
 
-public class SelectHandler implements Handler<Message<JsonObject>>{
+import jdbc.Config;
 
-   public SelectHandler(){
+public class SelectHandler extends JdbcHandler {
 
+   public SelectHandler(Config config){
+      super(config);
    }
 
    public void handle(Message<JsonObject> message){

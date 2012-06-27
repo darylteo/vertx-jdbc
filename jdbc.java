@@ -5,18 +5,11 @@ import org.vertx.java.deploy.*;
 
 import java.sql.*;
 
+import jdbc.*;
 import jdbc.handlers.*;
 
 public class jdbc extends Verticle {
   
-   private class Config {
-      public String driver    = "";
-      public String url       = "";
-
-      public String username  = "";
-      public String password  = "";
-   }
-
    public void start(){
      
       final Config configuration = loadConfig(container.getConfig());
@@ -36,19 +29,6 @@ public class jdbc extends Verticle {
          return;
       }
 
-      try(
-         Connection conn = openConnection(configuration)
-      ){
-         container.getLogger().info(
-            String.format(
-               "Connected to Database \"%s\"",
-               configuration.url
-            )
-         );
-      }catch(Exception e){
-         e.printStackTrace();
-      }
-
       beginListening(configuration);
    }
 
@@ -59,7 +39,7 @@ public class jdbc extends Verticle {
 
       eb.registerHandler(
          "test.address",
-         new SelectHandler()
+         new SelectHandler(configuration)
       );
    }
 
@@ -78,15 +58,6 @@ public class jdbc extends Verticle {
       Class.forName(driver); 
    }
 
-   private Connection openConnection(Config configuration) 
-      throws SQLException {
-
-      return DriverManager.getConnection(
-         configuration.url,
-         configuration.username,
-         configuration.password
-      );
-   }
 
    private void closeConnection(Connection conn){
       if(conn == null){
