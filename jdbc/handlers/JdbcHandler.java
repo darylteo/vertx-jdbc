@@ -17,7 +17,7 @@ public abstract class JdbcHandler
       this.config = config;
    }
 
-   Connection openConnection(Config configuration) 
+   Connection openConnection() 
       throws SQLException {
 
       return DriverManager.getConnection(
