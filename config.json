@@ -1,6 +1,7 @@
 {
    "driver"    :  "org.postgresql.Driver",
    "url"       :  "jdbc:postgresql://localhost/jdbctest",
-   "username"  : "jdbctest",
-   "password"  : "jdbctest"
+   "username"  :  "jdbctest",
+   "password"  :  "jdbctest",
+   "prefix"    :  "jdbc"
 }

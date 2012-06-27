@@ -35,10 +35,11 @@ public class jdbc extends Verticle {
 
    /* EventBus Methods */
    private void beginListening(Config configuration){
-      EventBus eb = vertx.eventBus();   
+      final EventBus eb = vertx.eventBus();   
+      final String address = configuration.prefix;
 
       eb.registerHandler(
-         "test.address",
+         address + ".query",
          new SelectHandler(configuration)
       );
    }
@@ -85,6 +86,7 @@ public class jdbc extends Verticle {
       result.url = config.getString("url");
       result.username = config.getString("username");
       result.password = config.getString("password");
+      result.prefix = config.getString("prefix");
       
       return result;
    }

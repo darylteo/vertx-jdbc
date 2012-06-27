@@ -15,21 +15,22 @@ public class SelectHandler extends JdbcHandler {
    }
 
    public void handle(Message<JsonObject> message){
+
+      System.out.println("Message Received: " + message.body);
+
       try(
          Connection conn = super.openConnection()
       ){
+         final String query = message.body.getString("query"); 
 
-         PreparedStatement stmt = conn.prepareStatement(
-            "SELECT * FROM test;"
+         final PreparedStatement stmt = conn.prepareStatement(
+            query
          );
 
-         ResultSet rs = stmt.executeQuery();
+         final ResultSet rs = stmt.executeQuery();
+         final JsonObject result = resultSetToJsonObject(rs);
 
-         while(rs.next()){
-            System.out.print(rs.getInt(1) + " : ");
-            System.out.println(rs.getString(2));
-         }
-
+         message.reply(result);
       }catch(SQLException e){
          e.printStackTrace();
       }
