@@ -28,11 +28,7 @@ public class SelectHandler extends JdbcHandler {
             query
          );
 
-         int count = 0;
-         for(Object param : params){
-            count ++;
-            setParameter(stmt,(JsonObject)param,count);
-         }
+         setParameters(stmt,params);
 
          final ResultSet rs = stmt.executeQuery();
          final JsonObject result = resultSetToJsonObject(rs);
@@ -47,6 +43,21 @@ public class SelectHandler extends JdbcHandler {
       }
    }
 
+
+   private void setParameters(
+      PreparedStatement stmt,
+      JsonArray params
+   ) throws SQLException {
+      if(params == null){
+         return;
+      }
+
+      int count = 0;
+      for(Object param : params){
+         count ++;
+         setParameter(stmt,(JsonObject)param,count);
+      }
+   }
 
    private void setParameter(
       PreparedStatement stmt,
