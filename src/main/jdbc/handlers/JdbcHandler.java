@@ -27,7 +27,7 @@ public abstract class JdbcHandler
       );
    }
 
-   JsonObject resultSetToJsonObject(ResultSet rs)
+   Result resultSetToResult(ResultSet rs)
       throws SQLException {
 
       /* Retrieve MetaData of ResultSet */
@@ -42,8 +42,7 @@ public abstract class JdbcHandler
          names[i-1] = metadata.getColumnLabel(i);
       }
 
-      JsonObject result = new JsonObject();
-      JsonArray data = new JsonArray();
+      Result result = new Result();
 
       while(rs.next()){
          JsonObject row = new JsonObject();
@@ -70,12 +69,8 @@ public abstract class JdbcHandler
             }
          }
 
-         data.addObject(row);
-            
+         result.addRow(row);
       }
-
-      result.putArray("result", data);
-      result.putBoolean("success", true);
 
       return result;
    }

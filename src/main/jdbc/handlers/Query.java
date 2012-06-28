@@ -2,22 +2,17 @@ package jdbc.handlers;
 
 import org.vertx.java.core.json.*;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.*;
 
 class Command {
    private boolean transaction = false;
-   private List<Query> queries = new ArrayList<>();
+   private List<Query> queries = new LinkedList<>();
 
    public Command(JsonObject object){
       this.transaction = object.getBoolean("transaction");
 
-      if(!insertQueries(object)){
-         if (!insertSingleQuery(object)){
-            /* TODO: Fail */
-         }
-      }
-   }
+      insertQueries(object);
+   } 
 
    /* Accessors */
    public boolean isTransaction(){
@@ -28,46 +23,23 @@ class Command {
       return this.queries;
    }
 
-   /* Json Methods */
-   public JsonObject toJsonObject(){
-      return new JsonObject();
-   }
 
    /* Private Methods */
-   private boolean insertQueries(JsonObject object){
-      try{
-         JsonArray queryArray = object.getArray("queries");         
+   private void insertQueries(JsonObject object){
+      JsonArray queryArray = object.getArray("queries");         
 
-         for(Object query : queryArray){
-            queries.add(
-               new Query((JsonObject)query)
-            );
-         }
-      }catch(ClassCastException e){
-         return false;   
-      }
-
-      return true;
-   }
-   private boolean insertSingleQuery(JsonObject object){
-      try{
-         JsonObject queryObject = object.getObject("queries");         
-
+      for(Object query : queryArray){
          queries.add(
-            new Query((JsonObject)queryObject)
+            new Query((JsonObject)query)
          );
-      }catch(ClassCastException e){
-         return false;
       }
-
-      return true;
    }
 }
 
 
 class Query {
    private String query = "";
-   private List<Parameter> params = new ArrayList<>();
+   private List<Parameter> params = new LinkedList<>();
 
    public Query(JsonObject object){
       this.query = object.getString("query");
@@ -131,14 +103,67 @@ class Parameter {
 
 class Reply {
    private boolean success = true;
-   private List<Result> results;
+   private List<ResultGroup> results = new LinkedList<>();
 
    /* Mutators */
    public void setSuccess(boolean value){
       this.success = value;
    }
+
+   public void addResultGroup(ResultGroup result){
+      this.results.add(result);
+   }
+
+   public JsonObject toJson(){
+      JsonObject result = new JsonObject();
+
+      result.putBoolean("success",success);
+
+      JsonArray array = new JsonArray();
+
+      for(ResultGroup group : results){
+         array.addArray(group.toJson());
+      }
+      
+      result.putArray("result",array);
+
+      return result;
+
+   }
+}
+
+class ResultGroup {
+   private List<Result> results = new LinkedList<>();
+
+   public void addResult(Result result){
+      this.results.add(result);
+   }
+
+   public JsonArray toJson(){
+      System.out.println("Array Length: " + this.results.size());
+      JsonArray array = new JsonArray();
+      
+      for(Result result : results){
+         array.addArray(result.toJson());
+      }
+
+      return array;
+   }
 }
 
 class Result {
-    
+   private List<JsonObject> rows = new LinkedList<>();   
+
+   public void addRow(JsonObject row){
+      this.rows.add(row);
+   }
+
+   public JsonArray toJson(){
+      JsonArray array = new JsonArray();
+      for (JsonObject object : this.rows){
+         array.addObject(object);
+      }
+
+      return array;
+   }
 }

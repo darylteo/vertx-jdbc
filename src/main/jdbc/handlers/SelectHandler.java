@@ -19,32 +19,31 @@ public class SelectHandler extends JdbcHandler {
 
       System.out.println("Message Received: " + message.body);
 
+      Reply reply = new Reply();
+
       try(
          final Connection conn = super.openConnection()
       ){
          Command command = new Command(message.body);
 
          for(Query query : command.getQueries()){  
+            ResultGroup resultGroup = new ResultGroup();
+
             Statement stmt = this.executeQuery(query,conn);
 
             ResultSet rs = stmt.getResultSet();
-            while(rs != null){
-               JsonObject result = resultSetToJsonObject(rs);
-               
-               message.reply(result);
+            resultGroup.addResult(resultSetToResult(rs));
 
-               stmt.getMoreResults();
-               rs = stmt.getResultSet();
-            }
+            reply.addResultGroup(resultGroup);
          }
 
       }catch(SQLException e){
          e.printStackTrace();
 
-         message.reply(
-            super.generateErrorReply(e)
-         );
+         reply.setSuccess(false);
       }
+
+      message.reply(reply.toJson());
    }
 
 
