@@ -5,6 +5,7 @@ import org.vertx.java.core.eventbus.*;
 import org.vertx.java.core.json.*;
 
 import java.sql.*;
+import java.util.*;
 
 import jdbc.Config;
 
@@ -21,19 +22,22 @@ public class SelectHandler extends JdbcHandler {
       try(
          final Connection conn = super.openConnection()
       ){
-         final String query = message.body.getString("query"); 
-         final JsonArray params = message.body.getArray("params");
+         Command command = new Command(message.body);
 
-         final PreparedStatement stmt = conn.prepareStatement(
-            query
-         );
+         for(Query query : command.getQueries()){  
+            Statement stmt = this.executeQuery(query,conn);
 
-         setParameters(stmt,params);
+            ResultSet rs = stmt.getResultSet();
+            while(rs != null){
+               JsonObject result = resultSetToJsonObject(rs);
+               
+               message.reply(result);
 
-         final ResultSet rs = stmt.executeQuery();
-         final JsonObject result = resultSetToJsonObject(rs);
+               stmt.getMoreResults();
+               rs = stmt.getResultSet();
+            }
+         }
 
-         message.reply(result);
       }catch(SQLException e){
          e.printStackTrace();
 
@@ -44,27 +48,38 @@ public class SelectHandler extends JdbcHandler {
    }
 
 
+   private Statement executeQuery(Query query, Connection conn)
+      throws SQLException {
+      
+      final PreparedStatement stmt = conn.prepareStatement(
+         query.getQueryString() 
+      );
+
+      setParameters(stmt,query.getParameters());
+
+      final boolean success = stmt.execute();
+      /* TODO: Throw exception if fail */ 
+
+      return stmt;
+   }
+
    private void setParameters(
       PreparedStatement stmt,
-      JsonArray params
+      List<Parameter> params
    ) throws SQLException {
-      if(params == null){
-         return;
-      }
 
-      int count = 0;
-      for(Object param : params){
-         count ++;
-         setParameter(stmt,(JsonObject)param,count);
+      for(int i = 0; i < params.size(); i++){
+         /* JDBC Parameter Index is 1 based. */
+         setParameter(stmt,params.get(i),i+1);
       }
    }
 
    private void setParameter(
       PreparedStatement stmt,
-      JsonObject param,
+      Parameter param,
       int index
    ) throws SQLException {
-      final String type = param.getString("type");
+      final String type = param.getType();
 
 
       /* Information about mapping SQL Types to Java Types can 
@@ -76,15 +91,15 @@ public class SelectHandler extends JdbcHandler {
          /* TINYINT and SMALLINT map to Short */
          case "TINYINT":
          case "SMALLINT":
-            stmt.setShort(index,param.getNumber("value").shortValue());
+            stmt.setShort(index,param.getValueAsShort());
             break;
 
          case "INTEGER":
-            stmt.setInt(index,param.getNumber("value").intValue());
+            stmt.setInt(index,param.getValueAsInteger());
             break;
 
          case "BIGINT":
-            stmt.setLong(index,param.getNumber("value").longValue());
+            stmt.setLong(index,param.getValueAsLong());
             break;
 
          /* String Types*/
@@ -92,7 +107,7 @@ public class SelectHandler extends JdbcHandler {
          case "NCHAR":
          case "VARCHAR":
          case "NVARCHAR":
-            stmt.setString(index,param.getString("value"));
+            stmt.setString(index,param.getValueAsString());
             break;
       }
    }
