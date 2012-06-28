@@ -1,7 +1,8 @@
+package jdbc.handlers;
+
 class Query {
    public String query = "";
 
-   public 
 }
 
 class Parameter {
