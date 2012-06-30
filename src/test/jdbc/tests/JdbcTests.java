@@ -17,4 +17,13 @@ public class JdbcTests extends TestBase {
       super.tearDown();
    }
 
+   @Test
+   public void testSingleSelectQuery() throws Exception {
+      startTest(getMethodName());
+   }
+
+   @Test
+   public void testInsertData() throws Exception {
+      startTest(getMethodName());
+   }
 }

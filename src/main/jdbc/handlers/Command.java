@@ -9,7 +9,7 @@ public class Command {
    private List<Query> queries = new LinkedList<>();
 
    public Command(JsonObject object){
-      this.transaction = object.getBoolean("transaction");
+      this.transaction = object.getBoolean("transaction",false);
 
       insertQueries(object);
    } 

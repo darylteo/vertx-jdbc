@@ -3,5 +3,7 @@
    "url"       :  "jdbc:postgresql://localhost/jdbctest",
    "username"  :  "jdbctest",
    "password"  :  "jdbctest",
-   "prefix"    :  "jdbc"
+   "prefix"    :  "jdbc",
+
+   "main"      :  "jdbc"
 }
