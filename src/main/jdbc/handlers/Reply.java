@@ -6,31 +6,31 @@ import java.util.*;
 
 class Reply {
    private boolean success = true;
-   private List<ResultGroup> results = new LinkedList<>();
+   private List<Result> results = new LinkedList<>();
 
    /* Mutators */
    public void setSuccess(boolean value){
       this.success = value;
    }
 
-   public void addResultGroup(ResultGroup result){
+   public void addResult(Result result){
       this.results.add(result);
    }
 
    public JsonObject toJson(){
-      JsonObject result = new JsonObject();
+      JsonObject reply = new JsonObject();
 
-      result.putBoolean("success",success);
+      reply.putBoolean("success",success);
 
       JsonArray array = new JsonArray();
 
-      for(ResultGroup group : results){
-         array.addArray(group.toJson());
+      for(Result result : results){
+         array.addArray(result.toJson());
       }
       
-      result.putArray("result",array);
+      reply.putArray("result",array);
 
-      return result;
+      return reply;
 
    }
 }

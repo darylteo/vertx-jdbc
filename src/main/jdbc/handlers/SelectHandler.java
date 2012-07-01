@@ -27,14 +27,12 @@ public class SelectHandler extends JdbcHandler {
          Command command = new Command(message.body);
 
          for(Query query : command.getQueries()){  
-            ResultGroup resultGroup = new ResultGroup();
-
             Statement stmt = this.executeQuery(query,conn);
 
             ResultSet rs = stmt.getResultSet();
-            resultGroup.addResult(resultSetToResult(rs));
+            Result result = resultSetToResult(rs);
 
-            reply.addResultGroup(resultGroup);
+            reply.addResult(result);
          }
 
       }catch(SQLException e){

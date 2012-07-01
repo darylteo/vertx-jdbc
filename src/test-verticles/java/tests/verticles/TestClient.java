@@ -6,6 +6,7 @@ import org.vertx.java.core.json.*;
 import org.vertx.java.framework.*;
 
 import java.sql.*;
+import java.util.*;
 
 public class TestClient extends TestClientBase {
    
@@ -53,7 +54,27 @@ public class TestClient extends TestClientBase {
             ),
          new Handler<Message<JsonObject>>(){
             public void handle(Message<JsonObject> message){
-               tu.testComplete();
+
+               System.out.println(message.body); 
+
+               try{
+                  JsonObject body = message.body;
+
+                  tu.azzert(body.getBoolean("success") == true, "Query was unsuccessful");
+                  
+                  Object[] resultArray = body.getArray("result").toArray();
+
+                  tu.azzert(resultArray.length == 1, "Incorrect number of results");
+
+                  List queryResult = (List)resultArray[0];
+
+                  tu.azzert(queryResult.size() == 3, "Query return incorrect number of rows");
+
+                  tu.testComplete();
+               }catch (Throwable e){
+                  tu.exception(e, "Failed to parse message body");
+                  tu.testComplete();
+               }
             }
          }
       );
