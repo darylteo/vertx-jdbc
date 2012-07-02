@@ -23,7 +23,12 @@ public class JdbcTests extends TestBase {
    }
 
    @Test
-   public void testTransactionQuery() throws Exception {
+   public void testTransactionQueryRollback() throws Exception {
+      startTest(getMethodName());
+   }
+
+   @Test
+   public void testTransactionQueryPass() throws Exception {
       startTest(getMethodName());
    }
 }

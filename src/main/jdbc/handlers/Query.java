@@ -11,7 +11,7 @@ public class Query {
    public Query(JsonObject object){
       this.query = object.getString("query");
 
-      insertParameters(object.getArray("params"));
+      insertParameters(object);
    }
 
    /* Accessors */
@@ -23,7 +23,9 @@ public class Query {
    }
 
    /* Private Methods */
-   private void insertParameters(JsonArray params){
+   private void insertParameters(JsonObject object){
+      Object field = object.getField("params");
+
       if(params == null){
          return;
       }

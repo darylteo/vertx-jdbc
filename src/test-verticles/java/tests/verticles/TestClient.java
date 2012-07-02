@@ -79,7 +79,72 @@ public class TestClient extends TestClientBase {
       );
    }
    
-   public void testTransactionQuery() throws Exception {
+   public void testTransactionQueryPass() throws Exception {
+ 
+      final EventBus eb = vertx.eventBus();
+
+      Handler<Message<JsonObject>> replyHandler = 
+         new Handler<Message<JsonObject>>(){
+            public void handle(Message<JsonObject> message){
+
+               try{
+                  JsonObject body = message.body;
+
+                  tu.azzert(body.getBoolean("success") == true, "Query was not successful");
+                  tu.testComplete();
+               }catch (Throwable e){
+                  tu.exception(e, "Failed to parse message body");
+                  tu.testComplete();
+               }
+            }
+         };
+
+      eb.send(
+         "jdbc.query",
+         new JsonObject()
+            .putBoolean(
+               "transaction",
+               true
+            ).putArray(
+               "queries", 
+               new JsonArray()
+                  .addObject(new JsonObject()
+                     .putString(
+                        "query",
+                        "UPDATE orders SET dateofpurchase = ? WHERE id = ?"
+                     ).putArray(
+                        "params",
+                        new JsonArray().addObject(
+                           new JsonObject()
+                              .putString("type","DATE")
+                              .putString("value",new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new java.util.Date()))
+                        ).addObject(
+                           new JsonObject()
+                              .putString("type","INTEGER")
+                              .putNumber("value",2)
+                        )
+                     )
+                  )
+                  .addObject(new JsonObject()
+                     .putString(
+                        "query",
+                        "SELECT * FROM orders WHERE id = ?"
+                     ).putArray(
+                        "params",
+                        new JsonArray().addObject(
+                           new JsonObject()
+                              .putString("type","INTEGER")
+                              .putNumber("value",2)
+                        )
+                     )
+                  )
+            ),
+         replyHandler
+      );
+
+   }
+
+   public void testTransactionQueryRollback() throws Exception {
  
       final EventBus eb = vertx.eventBus();
 

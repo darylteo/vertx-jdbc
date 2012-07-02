@@ -28,6 +28,10 @@ public class Command {
    private void insertQueries(JsonObject object){
       Object field = object.getField("queries"); 
 
+      if (field == null){
+         return;
+      }
+
       if (field instanceof JsonArray){
          for(Object query : (JsonArray)field){
             queries.add(

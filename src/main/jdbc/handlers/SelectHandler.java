@@ -19,44 +19,102 @@ public class SelectHandler extends JdbcHandler {
 
       System.out.println("Message Received: " + message.body);
 
+      message.reply(
+         executeCommand(message.body)
+            .toJson()
+      );
+   }
+
+   private Reply executeCommand(JsonObject body){
       Reply reply = new Reply();
 
-      try(
-         final Connection conn = super.openConnection()
-      ){
-         Command command = new Command(message.body);
+      try{
+         try(
+            final Connection conn = super.openConnection()
+         ){
+            Command command = new Command(body);
 
-         try{
             if(command.isTransaction()){
-               /* Turn off Auto Commit for Transaction */
-               conn.setAutoCommit(false);
+               this.executeTransactionCommand(
+                  command,
+                  conn,
+                  reply
+               );
+            }else{
+               this.executeNonTransactionCommand(
+                  command,
+                  conn,
+                  reply
+               );
             }
-
-            for(Query query : command.getQueries()){  
-               Statement stmt = this.executeQuery(query,conn);
-
-               ResultSet rs = stmt.getResultSet();
-               Result result = resultSetToResult(rs);
-
-               reply.addResult(result);
-            }
-
-         }catch(SQLException e){
-            conn.rollback();
-
-            throw e;
          }
       }catch(Exception e){
          reply.setSuccess(false);
          reply.addException(e);
       }
 
-      message.reply(reply.toJson());
+      return reply;
    }
 
+   private Reply executeNonTransactionCommand(
+      Command command,
+      Connection conn,
+      Reply reply
+   ) throws SQLException {
 
-   private Statement executeQuery(Query query, Connection conn)
-      throws SQLException {
+      executeQueries(
+         command.getQueries(),
+         conn,
+         reply
+      );
+
+      return reply;
+   }
+
+   private Reply executeTransactionCommand(
+      Command command,
+      Connection conn,
+      Reply reply
+   ) throws SQLException {
+
+      try {
+         conn.setAutoCommit(false);
+
+         executeQueries(
+            command.getQueries(),
+            conn,
+            reply
+         );
+
+         conn.commit();
+      }catch(SQLException e){
+         conn.rollback();
+         throw e;
+      }
+
+      return reply;
+   }
+
+   private void executeQueries(
+      List<Query> queries,
+      Connection conn,
+      Reply reply
+   ) throws SQLException {
+     
+      for(Query query : queries){  
+         Statement stmt = this.executeQuery(query,conn);
+
+         ResultSet rs = stmt.getResultSet();
+         Result result = resultSetToResult(rs);
+
+         reply.addResult(result);
+      }
+   }
+
+   private Statement executeQuery(
+      Query query,
+      Connection conn
+   ) throws SQLException {
       
       final PreparedStatement stmt = conn.prepareStatement(
          query.getQueryString() 
@@ -86,8 +144,8 @@ public class SelectHandler extends JdbcHandler {
       Parameter param,
       int index
    ) throws SQLException {
-      final String type = param.getType();
 
+      final String type = param.getType();
 
       /* Information about mapping SQL Types to Java Types can 
        * be found here
