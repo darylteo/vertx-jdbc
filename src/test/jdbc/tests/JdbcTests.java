@@ -23,7 +23,7 @@ public class JdbcTests extends TestBase {
    }
 
    @Test
-   public void testInsertData() throws Exception {
+   public void testTransactionQuery() throws Exception {
       startTest(getMethodName());
    }
 }

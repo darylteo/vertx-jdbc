@@ -26,19 +26,29 @@ public class SelectHandler extends JdbcHandler {
       ){
          Command command = new Command(message.body);
 
-         for(Query query : command.getQueries()){  
-            Statement stmt = this.executeQuery(query,conn);
+         try{
+            if(command.isTransaction()){
+               /* Turn off Auto Commit for Transaction */
+               conn.setAutoCommit(false);
+            }
 
-            ResultSet rs = stmt.getResultSet();
-            Result result = resultSetToResult(rs);
+            for(Query query : command.getQueries()){  
+               Statement stmt = this.executeQuery(query,conn);
 
-            reply.addResult(result);
+               ResultSet rs = stmt.getResultSet();
+               Result result = resultSetToResult(rs);
+
+               reply.addResult(result);
+            }
+
+         }catch(SQLException e){
+            conn.rollback();
+
+            throw e;
          }
-
-      }catch(SQLException e){
-         e.printStackTrace();
-
+      }catch(Exception e){
          reply.setSuccess(false);
+         reply.addException(e);
       }
 
       message.reply(reply.toJson());

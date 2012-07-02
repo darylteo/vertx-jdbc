@@ -80,7 +80,85 @@ public class TestClient extends TestClientBase {
       );
    }
    
-   public void testInsertData() throws Exception {
-      tu.testComplete();
+   public void testTransactionQuery() throws Exception {
+ 
+      final EventBus eb = vertx.eventBus();
+
+      Handler<Message<JsonObject>> replyHandler = 
+         new Handler<Message<JsonObject>>(){
+            public void handle(Message<JsonObject> message){
+
+               try{
+                  JsonObject body = message.body;
+
+                  tu.azzert(body.getBoolean("success") == false, "Query was successful");
+
+                  eb.send(
+                     "jdbc.query",
+                     new JsonObject()
+                        .putArray(
+                           "queries",
+                           new JsonArray()
+                              .addObject(new JsonObject()
+                                 .putString(
+                                    "query",
+                                    "SELECT COUNT(*) rowcount FROM items"
+                                 )
+                              )
+                        ),
+                     new Handler<Message<JsonObject>>(){
+                        public void handle(Message<JsonObject> message){
+
+                           System.out.println(message.body);
+                           int rowcount = (Integer)((Map)((List)message.body.getArray("result").toArray()[0]).get(0)).get("rowcount");
+
+                           try{
+                              tu.azzert(rowcount == 3);
+                           }catch(Throwable e){
+                              tu.exception(e, "Failed to parse message body");
+                           }
+                           
+                           tu.testComplete();
+                        }
+                     }
+                  );
+
+               }catch (Throwable e){
+                  tu.exception(e, "Failed to parse message body");
+                  tu.testComplete();
+               }
+            }
+         };
+
+      eb.send(
+         "jdbc.query",
+         new JsonObject()
+            .putBoolean(
+               "transaction",
+               true
+            ).putArray(
+               "queries", 
+               new JsonArray()
+                  .addObject(new JsonObject()
+                     .putString(
+                        "query",
+                        "INSERT INTO items (id,name,quantity,price,description) " + 
+                           "VALUES (4,'Mirror',5,20.00,'A mirror')"
+                     )
+                  ).addObject(new JsonObject()
+                     .putString(
+                        "query",
+                        "INSERT INTO items (id,name,quantity,price,description) " + 
+                           "VALUES (4,'Mirror Dupe',5,20.00,'This should fail')"
+                     )
+                  ).addObject(new JsonObject()
+                     .putString(
+                        "query",
+                        "SELECT * FROM items;"
+                     )
+                  )
+            ),
+         replyHandler
+      );
    }
 }
