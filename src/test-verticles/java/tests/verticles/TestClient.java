@@ -42,15 +42,14 @@ public class TestClient extends TestClientBase {
       eb.send(
          "jdbc.query",
          new JsonObject()
-            .putArray(
+            .putObject(
                "queries", 
-               new JsonArray()
-                  .addObject(new JsonObject()
-                     .putString(
-                        "query",
-                        "SELECT * FROM items;"
-                     )
+               new JsonObject()
+                  .putString(
+                     "query",
+                     "SELECT * FROM items;"
                   )
+               
             ),
          new Handler<Message<JsonObject>>(){
             public void handle(Message<JsonObject> message){

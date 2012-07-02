@@ -94,7 +94,7 @@
       <batchtest haltonfailure="yes" haltonerror="yes" fork="yes" todir="${test-results}">
         <formatter type="plain" usefile="yes"/>
         <fileset dir="${build}/${build-test}">
-          <include name="org/vertx/mods/tests/**/*Test.class"/>
+          <include name="jdbc/tests/**/*Tests.class"/>
         </fileset>
       </batchtest>
     </junit>

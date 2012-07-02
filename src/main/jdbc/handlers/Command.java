@@ -26,13 +26,20 @@ public class Command {
 
    /* Private Methods */
    private void insertQueries(JsonObject object){
-      JsonArray queryArray = object.getArray("queries");         
+      Object field = object.getField("queries"); 
 
-      for(Object query : queryArray){
+      if (field instanceof JsonArray){
+         for(Object query : (JsonArray)field){
+            queries.add(
+               new Query((JsonObject)query)
+            );
+         }
+      }else{
          queries.add(
-            new Query((JsonObject)query)
+            new Query((JsonObject)field)
          );
       }
+
    }
 }
 
