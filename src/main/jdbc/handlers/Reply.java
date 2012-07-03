@@ -64,6 +64,8 @@ class Reply {
       JsonArray array = new JsonArray();
 
       for(Exception exception : exceptions){
+         exception.printStackTrace();
+
          array.addObject(
             new JsonObject()
                .putString(

@@ -30,6 +30,10 @@ public abstract class JdbcHandler
    Result resultSetToResult(ResultSet rs)
       throws SQLException {
 
+      if (rs == null){
+         return new Result();
+      }
+
       /* Retrieve MetaData of ResultSet */
       ResultSetMetaData metadata = rs.getMetaData();
       int columnCount = metadata.getColumnCount();

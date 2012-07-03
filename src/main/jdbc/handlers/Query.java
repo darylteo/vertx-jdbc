@@ -26,11 +26,14 @@ public class Query {
    private void insertParameters(JsonObject object){
       Object field = object.getField("params");
 
-      if(params == null){
+      if(field == null){
          return;
       }
 
-      for(Object param : params){
+      JsonArray paramArray = (JsonArray)field;
+
+      System.out.println("WTF " + paramArray);
+      for(Object param : paramArray){
          params.add(
             new Parameter((JsonObject)param)
          );

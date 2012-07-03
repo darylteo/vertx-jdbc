@@ -54,8 +54,6 @@ public class TestClient extends TestClientBase {
          new Handler<Message<JsonObject>>(){
             public void handle(Message<JsonObject> message){
 
-               System.out.println(message.body); 
-
                try{
                   JsonObject body = message.body;
 
@@ -86,7 +84,6 @@ public class TestClient extends TestClientBase {
       Handler<Message<JsonObject>> replyHandler = 
          new Handler<Message<JsonObject>>(){
             public void handle(Message<JsonObject> message){
-
                try{
                   JsonObject body = message.body;
 
@@ -99,8 +96,7 @@ public class TestClient extends TestClientBase {
             }
          };
 
-      eb.send(
-         "jdbc.query",
+      JsonObject command = 
          new JsonObject()
             .putBoolean(
                "transaction",
@@ -117,11 +113,11 @@ public class TestClient extends TestClientBase {
                         new JsonArray().addObject(
                            new JsonObject()
                               .putString("type","DATE")
-                              .putString("value",new java.text.SimpleDateFormat("yyyy-MM-dd hh:mm:ss").format(new java.util.Date()))
+                              .putString("value",new java.text.SimpleDateFormat("yyyy/MM/dd hh:mm:ss").format(new java.util.Date()))
                         ).addObject(
                            new JsonObject()
                               .putString("type","INTEGER")
-                              .putNumber("value",2)
+                              .putNumber("value",1)
                         )
                      )
                   )
@@ -134,21 +130,39 @@ public class TestClient extends TestClientBase {
                         new JsonArray().addObject(
                            new JsonObject()
                               .putString("type","INTEGER")
-                              .putNumber("value",2)
+                              .putNumber("value",1)
                         )
                      )
                   )
-            ),
-         replyHandler
-      );
+            )
+      ;
 
+      executeCommand(command,replyHandler);
    }
 
    public void testTransactionQueryRollback() throws Exception {
  
-      final EventBus eb = vertx.eventBus();
+      final Handler<Message<JsonObject>> verifyHandler = 
+         new Handler<Message<JsonObject>>(){
+            public void handle(Message<JsonObject> message){
 
-      Handler<Message<JsonObject>> replyHandler = 
+               List resultArray = (List)(message.body.getArray("result").toArray()[0]);
+
+               Map resultMap = (Map)resultArray.get(0);
+               int rowcount = (Integer)resultMap.get("rowcount");
+
+               try{
+                  tu.azzert(rowcount == 3);
+               }catch(Throwable e){
+                  tu.exception(e, "Failed to parse message body");
+               }
+               
+               tu.testComplete();
+            }
+         };
+
+
+      final Handler<Message<JsonObject>> replyHandler = 
          new Handler<Message<JsonObject>>(){
             public void handle(Message<JsonObject> message){
 
@@ -157,8 +171,7 @@ public class TestClient extends TestClientBase {
 
                   tu.azzert(body.getBoolean("success") == false, "Query was successful");
 
-                  eb.send(
-                     "jdbc.query",
+                  TestClient.this.executeCommand(
                      new JsonObject()
                         .putArray(
                            "queries",
@@ -170,21 +183,7 @@ public class TestClient extends TestClientBase {
                                  )
                               )
                         ),
-                     new Handler<Message<JsonObject>>(){
-                        public void handle(Message<JsonObject> message){
-
-                           System.out.println(message.body);
-                           int rowcount = (Integer)((Map)((List)message.body.getArray("result").toArray()[0]).get(0)).get("rowcount");
-
-                           try{
-                              tu.azzert(rowcount == 3);
-                           }catch(Throwable e){
-                              tu.exception(e, "Failed to parse message body");
-                           }
-                           
-                           tu.testComplete();
-                        }
-                     }
+                     verifyHandler
                   );
 
                }catch (Throwable e){
@@ -194,8 +193,7 @@ public class TestClient extends TestClientBase {
             }
          };
 
-      eb.send(
-         "jdbc.query",
+      JsonObject command = 
          new JsonObject()
             .putBoolean(
                "transaction",
@@ -221,8 +219,29 @@ public class TestClient extends TestClientBase {
                         "SELECT * FROM items;"
                      )
                   )
-            ),
-         replyHandler
+            );
+      
+      executeCommand(command,replyHandler);
+   }
+
+
+   private void executeCommand(
+      final JsonObject command, 
+      final Handler<Message<JsonObject>> handler)
+   {
+      System.out.println("==== Execute Command ====");
+      System.out.println("\n" + command);
+
+      vertx.eventBus().send(
+         "jdbc.query",
+         command,
+         new Handler<Message<JsonObject>>(){
+            public void handle(Message<JsonObject> message){
+               System.out.println("\n==== Reply: " + message.body);
+
+               handler.handle(message);
+            }
+         }
       );
    }
 }

@@ -31,5 +31,17 @@ public class Parameter {
    public String getValueAsString(){
       return (String)this.value;
    }
+
+   public java.util.Date getValueAsDate() 
+      throws java.text.ParseException
+   {
+      java.util.Date date = 
+         java.text.DateFormat
+            .getDateInstance()
+            .parse((String)this.value);
+
+      return date;
+   }
+
 }
 

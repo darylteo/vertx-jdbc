@@ -11,7 +11,6 @@ import jdbc.handlers.*;
 public class jdbc extends Verticle {
   
    public void start(){
-     
       final Config configuration = loadConfig(container.getConfig());
 
       try{
@@ -28,10 +27,7 @@ public class jdbc extends Verticle {
 
          return;
       }
-
-      beginListening(configuration);
    }
-
 
    /* EventBus Methods */
    private void beginListening(Config configuration){

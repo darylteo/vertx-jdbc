@@ -6,6 +6,7 @@ import org.vertx.java.core.json.*;
 
 import java.sql.*;
 import java.util.*;
+import java.text.*;
 
 import jdbc.Config;
 
@@ -16,9 +17,6 @@ public class SelectHandler extends JdbcHandler {
    }
 
    public void handle(Message<JsonObject> message){
-
-      System.out.println("Message Received: " + message.body);
-
       message.reply(
          executeCommand(message.body)
             .toJson()
@@ -60,7 +58,10 @@ public class SelectHandler extends JdbcHandler {
       Command command,
       Connection conn,
       Reply reply
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   {
 
       executeQueries(
          command.getQueries(),
@@ -75,7 +76,10 @@ public class SelectHandler extends JdbcHandler {
       Command command,
       Connection conn,
       Reply reply
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   {
 
       try {
          conn.setAutoCommit(false);
@@ -99,7 +103,10 @@ public class SelectHandler extends JdbcHandler {
       List<Query> queries,
       Connection conn,
       Reply reply
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   {
      
       for(Query query : queries){  
          Statement stmt = this.executeQuery(query,conn);
@@ -114,7 +121,10 @@ public class SelectHandler extends JdbcHandler {
    private Statement executeQuery(
       Query query,
       Connection conn
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   {
       
       final PreparedStatement stmt = conn.prepareStatement(
          query.getQueryString() 
@@ -131,7 +141,10 @@ public class SelectHandler extends JdbcHandler {
    private void setParameters(
       PreparedStatement stmt,
       List<Parameter> params
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   {
 
       for(int i = 0; i < params.size(); i++){
          /* JDBC Parameter Index is 1 based. */
@@ -143,7 +156,10 @@ public class SelectHandler extends JdbcHandler {
       PreparedStatement stmt,
       Parameter param,
       int index
-   ) throws SQLException {
+   ) throws 
+      SQLException,
+      ParseException
+   { 
 
       final String type = param.getType();
 
@@ -174,6 +190,16 @@ public class SelectHandler extends JdbcHandler {
          case "NVARCHAR":
             stmt.setString(index,param.getValueAsString());
             break;
+
+         /* Date Types */
+         case "DATE":
+            java.sql.Date sqldate = new java.sql.Date(
+               param
+                  .getValueAsDate()
+                  .getTime()
+            );
+
+            stmt.setDate(index,sqldate);
       }
    }
 }
